@@ -1,23 +1,12 @@
-# EDMMS — Executive & Departmental Meeting Management System
+# EDMMS PHP application
 
-Public testing copy. Original private repo: https://github.com/salemaldhaheri197-stack/edmms
+This public repo now contains the PHP/MySQL EDMMS app from the project zip.
 
-**Classification:** Reference implementation aligned to BRD/SRS v4.0  
-**Languages:** Arabic (RTL) + English (LTR)
+GitHub Pages cannot run PHP. Deploy to AwardSpace/atwebpages (or any PHP+MySQL host):
 
-This repository is a security-aware reference platform, not a certified national-defense deployment.
+1. Import `db.sql`
+2. Fill `config.php`
+3. Upload the folder as `/edmms/`
+4. Visit `/edmms/setup/reset_admin_password.php` once
 
-## Quick start
-
-```bash
-git clone https://github.com/salemaldhaheri197-stack/edmms-public.git
-cd edmms-public
-cp .env.example .env
-docker compose up --build
-```
-
-- API: http://localhost:8080/docs
-- Console: http://localhost:5173
-
-Dev seed password for all demo users: `ChangeMe!2026`
-Users: ceo (TOP_SECRET), vp.ops (SECRET), ea.ceo (SECRET), manager.it (CONFIDENTIAL), analyst (RESTRICTED), soc.admin (SECRET)
+Private copy: https://github.com/salemaldhaheri197-stack/edmms

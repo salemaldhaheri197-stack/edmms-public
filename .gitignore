@@ -1,8 +1,1 @@
-.env
-__pycache__/
-*.pyc
-.venv/
-node_modules/
-dist/
-*.db
-.DS_Store
+config.local.php
