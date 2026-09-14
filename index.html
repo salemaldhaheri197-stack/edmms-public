@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EDMMS Secure Console</title>
+  <style>
+    :root { --bg:#0b1220; --panel:#121a2b; --ink:#e8eefc; --muted:#93a0bc; --line:#243049; --gold:#c9a227; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font-family: "Segoe UI", Tahoma, sans-serif; }
+    body[dir="rtl"] { font-family: "Noto Naskh Arabic", "Segoe UI", Tahoma, sans-serif; }
+    .banner { text-align: center; letter-spacing: .14em; font-weight: 700; padding: .45rem; background: #3b1020; color: #ffd9d9; }
+    .top { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.4rem; border-bottom: 1px solid var(--line); gap: 1rem; flex-wrap: wrap; }
+    .brand { color: var(--gold); font-weight: 800; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 1.2rem; display: grid; gap: 1rem; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; }
+    input, textarea, button { background: #0e1626; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: .55rem .7rem; }
+    button { cursor: pointer; }
+    .gold { background: #3a2e10; border-color: var(--gold); color: #f3e2a3; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .muted { color: var(--muted); font-size: .9rem; }
+    .pill { border: 1px solid var(--gold); color: var(--gold); border-radius: 99px; padding: .12rem .5rem; font-size: .75rem; }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { border-bottom: 1px solid var(--line); padding: .45rem; text-align: start; }
+    .note { font-size: .8rem; color: #c9b27a; }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    const USERS = {
+      ceo: { password: "ChangeMe!2026", display_en: "Chief Executive", display_ar: "CEO", role: "executive", clearance: "TOP_SECRET", language: "ar" },
+      "vp.ops": { password: "ChangeMe!2026", display_en: "VP Operations", display_ar: "VP", role: "executive", clearance: "SECRET", language: "en" },
+      "ea.ceo": { password: "ChangeMe!2026", display_en: "Executive Assistant", display_ar: "EA", role: "ea", clearance: "SECRET", language: "en" },
+      "manager.it": { password: "ChangeMe!2026", display_en: "IT Manager", display_ar: "IT", role: "manager", clearance: "CONFIDENTIAL", language: "en" },
+      analyst: { password: "ChangeMe!2026", display_en: "Analyst", display_ar: "Analyst", role: "employee", clearance: "RESTRICTED", language: "en" },
+      "soc.admin": { password: "ChangeMe!2026", display_en: "SOC Administrator", display_ar: "SOC", role: "security_admin", clearance: "SECRET", language: "en" }
+    };
+    const RANK = { UNCLASSIFIED: 0, RESTRICTED: 1, CONFIDENTIAL: 2, SECRET: 3, TOP_SECRET: 4 };
+    const T = {
+      en: { title: "EDMMS Secure Console", login: "Sign in", meetings: "Compartmented meetings", actions: "Action items", voice: "Zero-retention voice booking", create: "Schedule", speak: "Submit transcript", logout: "Sign out", lang: "\u0627\u0644\u0639\u0631\u0628\u064a\u0629", user: "Username", pass: "Password" },
+      ar: { title: "EDMMS", login: "\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644", meetings: "Meetings", actions: "Actions", voice: "Voice", create: "Create", speak: "Submit", logout: "Out", lang: "English", user: "User", pass: "Pass" }
+    };
+    const state = {
+      lang: "en",
+      me: JSON.parse(localStorage.getItem("edmms_me") || "null"),
+      title: "Executive sync",
+      voice: "",
+      voiceOut: null,
+      meetings: JSON.parse(localStorage.getItem("edmms_meetings") || "null") || [
+        { id: 1, title: "Q3 Strategic Oversight", classification: "SECRET", status: "scheduled" }
+      ],
+      actions: [{ id: 1, title: "Harden isolated voice gateway mTLS", status: "open", classification: "SECRET" }]
+    };
+    function canSee(cls) { return RANK[state.me.clearance] >= RANK[cls]; }
+    function save() { localStorage.setItem("edmms_me", JSON.stringify(state.me)); localStorage.setItem("edmms_meetings", JSON.stringify(state.meetings)); }
+    function render() {
+      document.body.dir = state.lang === "ar" ? "rtl" : "ltr";
+      const t = T[state.lang];
+      const root = document.getElementById("app");
+      if (!state.me) {
+        root.innerHTML = `<div class="banner">EDMMS \u00b7 GITHUB PAGES DEMO</div><div class="wrap"><div class="card"><h1>${t.title}</h1><p class="note">Static demo. GitHub Pages cannot run the FastAPI backend.</p><div class="grid" style="margin-top:1rem"><input id="u" value="ceo" /><input id="p" type="password" value="ChangeMe!2026" /><button class="gold" id="login">${t.login}</button><button id="sw">${t.lang}</button></div><p class="muted">ceo / vp.ops / ea.ceo / manager.it / analyst / soc.admin \u2014 ChangeMe!2026</p></div></div>`;
+        document.getElementById("login").onclick = () => {
+          const rec = USERS[document.getElementById("u").value.trim()];
+          if (!rec || rec.password !== document.getElementById("p").value) { alert("invalid credentials"); return; }
+          state.me = { username: document.getElementById("u").value.trim(), ...rec };
+          state.lang = rec.language || state.lang; save(); render();
+        };
+        document.getElementById("sw").onclick = () => { state.lang = state.lang === "en" ? "ar" : "en"; render(); };
+        return;
+      }
+      const visible = state.meetings.filter(m => canSee(m.classification));
+      const visibleA = state.actions.filter(a => canSee(a.classification));
+      root.innerHTML = `<div class="banner">${state.me.clearance}</div><div class="top"><div class="brand">EDMMS</div><div><span class="pill">${state.me.clearance}</span> ${state.me.display_en} <button id="sw">${t.lang}</button> <button id="out">${t.logout}</button></div></div><div class="wrap"><div class="grid"><div class="card"><h3>${t.meetings}</h3><input id="title" value="${state.title}" /><button class="gold" id="create">${t.create}</button><table><tbody>${visible.map(m => `<tr><td>${m.id}</td><td>${m.title}</td><td>${m.classification}</td></tr>`).join("")}</tbody></table></div><div class="card"><h3>${t.actions}</h3><ul>${visibleA.map(a => `<li>${a.title} \u2014 ${a.status}</li>`).join("")}</ul></div></div><div class="card"><h3>${t.voice}</h3><textarea id="voice" rows="3">${state.voice}</textarea><div><button class="gold" id="speak">${t.speak}</button></div>${state.voiceOut ? `<pre class="muted">${state.voiceOut}</pre>` : ""}</div></div>`;
+      document.getElementById("sw").onclick = () => { state.lang = state.lang === "en" ? "ar" : "en"; render(); };
+      document.getElementById("out").onclick = () => { state.me = null; localStorage.removeItem("edmms_me"); render(); };
+      document.getElementById("create").onclick = () => {
+        const cls = state.me.clearance === "TOP_SECRET" ? "SECRET" : "RESTRICTED";
+        state.meetings.push({ id: Date.now() % 100000, title: document.getElementById("title").value, classification: cls, status: "scheduled" });
+        save(); render();
+      };
+      document.getElementById("speak").onclick = () => {
+        const text = document.getElementById("voice").value;
+        const book = /book|schedule|\u0627\u062d\u062c\u0632/i.test(text);
+        const cls = /secret|\u0633\u0631\u064a/i.test(text) ? "SECRET" : "RESTRICTED";
+        if (book && canSee(cls)) {
+          const id = Date.now() % 100000;
+          state.meetings.push({ id, title: text.slice(0,180), classification: cls, status: "scheduled" });
+          state.voiceOut = JSON.stringify({ zdr: true, intent: "book", meeting_id: id }, null, 2);
+        } else state.voiceOut = JSON.stringify({ zdr: true, intent: "query" }, null, 2);
+        save(); render();
+      };
+    }
+    render();
+  </script>
+</body>
+</html>
